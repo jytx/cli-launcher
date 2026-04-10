@@ -103,7 +103,8 @@ export function Header() {
           placeholder="搜索配置..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-7 px-4 rounded-lg bg-muted/60 border-0 text-[12px] placeholder:text-muted-foreground/40 outline-none focus:ring-1 focus:ring-ring/30 transition-shadow"
+          className="w-full h-7 !px-4 rounded-lg bg-muted/60 border-0 text-[12px] placeholder:text-muted-foreground/40 outline-none focus:ring-1 focus:ring-ring/30 transition-shadow"
+          style={{ paddingLeft: 10, paddingRight: 10 }}
         />
       </div>
 
