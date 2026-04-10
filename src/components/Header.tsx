@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useConfigStore } from '@/stores/useConfigStore'
 import { useUiStore } from '@/stores/useUiStore'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { launchAll, writeFile, readFile } from '@/services/tauri'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -21,6 +22,7 @@ function dedupeTitle(title: string, existingTitles: Set<string>): string {
 export function Header() {
   const { items, addItem, setItems } = useConfigStore()
   const { searchQuery, setSearchQuery } = useUiStore()
+  const { terminalApp } = useSettingsStore()
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   const handleLaunchAll = async () => {
@@ -35,7 +37,7 @@ export function Header() {
     const validItems = source.filter((item) => item.dir.trim() !== '')
     if (validItems.length === 0) return
     try {
-      await launchAll(validItems)
+      await launchAll(validItems, terminalApp)
     } catch (e) {
       console.error('批量启动失败:', e)
     }
@@ -101,7 +103,7 @@ export function Header() {
           placeholder="搜索配置..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-7 px-3 rounded-lg bg-muted/60 border-0 text-[12px] placeholder:text-muted-foreground/40 outline-none focus:ring-1 focus:ring-ring/30 transition-shadow"
+          className="w-full h-7 px-4 rounded-lg bg-muted/60 border-0 text-[12px] placeholder:text-muted-foreground/40 outline-none focus:ring-1 focus:ring-ring/30 transition-shadow"
         />
       </div>
 

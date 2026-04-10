@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { open } from '@tauri-apps/plugin-dialog'
 import type { ConfigItem as ConfigItemType } from '@/types'
 import { launchCmd, createDir, openFolder } from '@/services/tauri'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import {
   Dialog,
   DialogContent,
@@ -46,6 +47,7 @@ export function ConfigItemRow({
   const [creating, setCreating] = useState(false)
   const [created, setCreated] = useState(false)
   const [dirExists, setDirExists] = useState(false)
+  const { terminalApp } = useSettingsStore()
   const gradient = GRADIENTS[index % GRADIENTS.length]
 
   const handleBrowse = async () => {
@@ -67,7 +69,7 @@ export function ConfigItemRow({
     if (!item.dir.trim()) return
     setLaunching(true)
     try {
-      await launchCmd(item.dir, item.command || 'claude', item.title)
+      await launchCmd(item.dir, item.command || 'claude', item.title, terminalApp)
       setLaunched(true)
       setTimeout(() => setLaunched(false), 1500)
     } catch (e) {
