@@ -55,6 +55,7 @@ export function Header() {
       await writeFile(path, JSON.stringify(exportData, null, 2))
     } catch (e) {
       console.error('导出失败:', e)
+      alert(`导出配置失败: ${e}`)
     }
   }
 
