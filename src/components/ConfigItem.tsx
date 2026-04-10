@@ -208,7 +208,7 @@ export function ConfigItemRow({
               value={item.dir}
               onChange={(e) => onUpdate(item.id, 'dir', e.target.value)}
               placeholder="文件夹路径"
-              className="flex-1 min-w-0 h-10 text-[13px]"
+              className="flex-1 min-w-0 h-10 px-3 text-[13px]"
             />
             <Tooltip>
               <TooltipTrigger asChild>
@@ -270,7 +270,7 @@ export function ConfigItemRow({
             value={item.command}
             onChange={(e) => onUpdate(item.id, 'command', e.target.value)}
             placeholder="例如: claude"
-            className="h-10 text-[13px] font-mono"
+            className="h-10 px-3 text-[13px] font-mono"
           />
         </div>
       </div>
