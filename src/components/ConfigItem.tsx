@@ -122,7 +122,7 @@ export function ConfigItemRow({
       <div className={`h-[3px] bg-gradient-to-r ${gradient}`} />
 
       {/* 顶部：拖拽 + 标题 + 操作 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '18px 24px 10px 24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px 12px 20px' }}>
         <Tooltip>
           <TooltipTrigger
             {...dragHandleProps}
@@ -137,7 +137,7 @@ export function ConfigItemRow({
           value={item.title}
           onChange={(e) => onUpdate(item.id, 'title', e.target.value)}
           placeholder="未命名配置"
-          className="flex-1 h-8 border-transparent bg-transparent font-semibold text-sm shadow-none px-1 placeholder:text-muted-foreground/35 placeholder:font-normal"
+          className="flex-1 h-9 border-transparent bg-transparent font-semibold text-sm shadow-none px-2 placeholder:text-muted-foreground/35 placeholder:font-normal"
         />
 
         {/* 启动按钮 */}
@@ -145,18 +145,18 @@ export function ConfigItemRow({
           size="icon-sm"
           disabled={!item.dir.trim() || launching}
           onClick={handleLaunch}
-          className={`shrink-0 border-0 transition-all duration-300 ${
+          className={`shrink-0 h-9 min-w-9 transition-all duration-300 ${
             launched
               ? 'bg-emerald-500 text-white'
               : 'bg-emerald-600 hover:bg-emerald-500 hover:shadow-md hover:shadow-emerald-500/25 text-white'
           }`}
         >
           {launching ? (
-            <Loader2 className="size-3.5 animate-spin" />
+            <Loader2 className="size-4" />
           ) : launched ? (
-            <Check className="size-3.5" />
+            <Check className="size-4" />
           ) : (
-            <Play className="size-3.5" />
+            <Play className="size-4" />
           )}
         </Button>
 
@@ -164,9 +164,9 @@ export function ConfigItemRow({
         <Button
           size="icon-sm"
           onClick={handleDelete}
-          className="shrink-0 border-0 bg-muted text-muted-foreground hover:bg-destructive hover:text-white transition-colors"
+          className="shrink-0 h-9 min-w-9 border-0 bg-muted text-muted-foreground hover:bg-destructive hover:text-white transition-colors"
         >
-          <Trash2 className="size-3.5" />
+          <Trash2 className="size-4" />
         </Button>
 
         {/* 删除确认弹框 */}
@@ -197,10 +197,10 @@ export function ConfigItemRow({
       </div>
 
       {/* 字段区域 */}
-      <div style={{ padding: '8px 24px 20px 52px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ padding: '12px 20px 20px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* 工作目录 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <label className="text-[10px] font-medium text-muted-foreground/50 tracking-wide select-none uppercase">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <label className="text-[11px] font-medium text-muted-foreground/60 tracking-wide select-none uppercase">
             工作目录
           </label>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -208,43 +208,50 @@ export function ConfigItemRow({
               value={item.dir}
               onChange={(e) => onUpdate(item.id, 'dir', e.target.value)}
               placeholder="文件夹路径"
-              className="flex-1 min-w-0 h-9 text-[13px]"
+              className="flex-1 min-w-0 h-10 text-[13px]"
             />
-            <Button variant="outline" size="sm" onClick={handleBrowse} className="shrink-0 gap-1.5 px-3">
-              <FolderOpen className="size-3" />
-              浏览
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!item.dir.trim()}
-              onClick={handleOpenFolder}
-              className="shrink-0 gap-1.5 px-3"
-            >
-              <ExternalLink className="size-3" />
-              打开
-            </Button>
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={handleBrowse} className="shrink-0 h-10 min-w-10 px-3">
+                  <FolderOpen className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>浏览文件夹</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!item.dir.trim()}
+                  onClick={handleOpenFolder}
+                  className="shrink-0 h-10 min-w-10 px-3"
+                >
+                  <ExternalLink className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>打开文件夹</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <Button
                   variant="outline"
                   size="sm"
                   disabled={!item.dir.trim() || creating}
                   onClick={handleCreateDir}
-                  className={`shrink-0 gap-1.5 px-3 border-0 transition-all duration-300 ${
+                  className={`shrink-0 h-10 min-w-10 px-3 transition-all duration-300 ${
                     created
-                      ? 'bg-emerald-500 text-white border-emerald-500'
+                      ? 'bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600'
                       : ''
                   }`}
                 >
                   {creating ? (
-                    <Loader2 className="size-3 animate-spin" />
+                    <Loader2 className="size-4 animate-spin" />
                   ) : created ? (
-                    <Check className="size-3" />
+                    <Check className="size-4" />
                   ) : (
-                    <FolderPlus className="size-3" />
+                    <FolderPlus className="size-4" />
                   )}
-                  新建
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -255,15 +262,15 @@ export function ConfigItemRow({
         </div>
 
         {/* 执行指令 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <label className="text-[10px] font-medium text-muted-foreground/50 tracking-wide select-none uppercase">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <label className="text-[11px] font-medium text-muted-foreground/60 tracking-wide select-none uppercase">
             执行指令
           </label>
           <Input
             value={item.command}
             onChange={(e) => onUpdate(item.id, 'command', e.target.value)}
             placeholder="例如: claude"
-            className="h-9 text-[13px] font-mono"
+            className="h-10 text-[13px] font-mono"
           />
         </div>
       </div>
