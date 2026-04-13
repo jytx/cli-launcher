@@ -17,6 +17,7 @@ pub fn run() {
             let _ = window.set_focus();
         }))
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
             commands::launch_cmd,
             commands::launch_all,
@@ -25,6 +26,8 @@ pub fn run() {
             commands::get_exe_dir,
             commands::create_dir,
             commands::open_folder,
+            commands::validate_directory,
+            commands::handle_file_drop,
         ])
         .on_window_event(|window, event| {
             // 关闭窗口时隐藏到托盘而非退出

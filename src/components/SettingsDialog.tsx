@@ -13,7 +13,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { FolderOpen, Sun, Moon, Terminal as TerminalIcon } from 'lucide-react'
-import { sep } from '@tauri-apps/api/path'
 
 const CONFIG_FILENAME = 'clilauncher-config.json'
 
@@ -181,6 +180,20 @@ export function SettingsDialog({ open: isOpen, onOpenChange }: SettingsDialogPro
                   >
                     <TerminalIcon style={{ width: 14, height: 14 }} />
                     iTerm2
+                  </button>
+                  <button
+                    onClick={() => handleTerminalAppChange('ghostty')}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      padding: '5px 12px', borderRadius: 6, fontSize: 12, fontWeight: 500, border: 'none', cursor: 'pointer',
+                      background: terminalApp === 'ghostty' ? 'var(--card)' : 'transparent',
+                      color: terminalApp === 'ghostty' ? 'var(--foreground)' : 'var(--muted-foreground)',
+                      boxShadow: terminalApp === 'ghostty' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    <TerminalIcon style={{ width: 14, height: 14 }} />
+                    Ghostty
                   </button>
                 </div>
               </div>

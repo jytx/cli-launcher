@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type TerminalApp = 'default' | 'iterm2'
+export type TerminalApp = 'default' | 'iterm2' | 'ghostty'
 
 interface SettingsState {
   dataDir: string | null

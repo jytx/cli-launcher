@@ -47,6 +47,7 @@ export function ConfigItemRow({
   const [creating, setCreating] = useState(false)
   const [created, setCreated] = useState(false)
   const [dirExists, setDirExists] = useState(false)
+  const [launchError, setLaunchError] = useState<string | null>(null)
   const { terminalApp } = useSettingsStore()
   const gradient = GRADIENTS[index % GRADIENTS.length]
 
@@ -59,21 +60,53 @@ export function ConfigItemRow({
       })
       if (selected && typeof selected === 'string') {
         onUpdate(item.id, 'dir', selected)
+        updateTitleFromDir(selected)
       }
     } catch {
       // 用户取消选择
     }
   }
 
+  const updateTitleFromDir = (dirPath: string) => {
+    // 如果标题为空或为默认值"未命名配置"，则使用目录名作为标题
+    const currentTitle = item.title?.trim()
+    if (!currentTitle || currentTitle === '未命名配置') {
+      // 提取目录名：支持 Unix (/) 和 Windows (\) 路径
+      const dirName = dirPath.replace(/[/\\]+$/, '').split(/[/\\]/).pop() || dirPath
+      onUpdate(item.id, 'title', dirName)
+    }
+  }
+
+  const handleDirBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const value = e.target.value.trim()
+    if (value) {
+      updateTitleFromDir(value)
+    }
+  }
+
+  const handleDirKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      const value = (e.target as HTMLInputElement).value.trim()
+      if (value) {
+        updateTitleFromDir(value)
+      }
+    }
+  }
+
   const handleLaunch = async () => {
     if (!item.dir.trim()) return
     setLaunching(true)
+    setLaunchError(null)
     try {
+      console.log('正在启动终端:', { dir: item.dir, command: item.command, title: item.title, terminalApp })
       await launchCmd(item.dir, item.command || 'claude', item.title, terminalApp)
       setLaunched(true)
       setTimeout(() => setLaunched(false), 1500)
     } catch (e) {
       console.error('启动失败:', e)
+      setLaunchError(String(e))
+      // 显示错误信息 3 秒
+      setTimeout(() => setLaunchError(null), 3000)
     } finally {
       setLaunching(false)
     }
@@ -122,14 +155,16 @@ export function ConfigItemRow({
       <div className={`h-[3px] bg-gradient-to-r ${gradient}`} />
 
       {/* 顶部：拖拽 + 标题 + 操作 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px 12px 20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px 8px 14px' }}>
         <Tooltip>
-          <TooltipTrigger
-            {...dragHandleProps}
-            className="flex items-center justify-center w-5 cursor-grab active:cursor-grabbing text-muted-foreground/25 hover:text-muted-foreground/60 transition-colors shrink-0 select-none"
-          >
-            <GripVertical className="size-4" />
-          </TooltipTrigger>
+          <TooltipTrigger render={
+            <div
+              {...dragHandleProps}
+              className="flex items-center justify-center w-5 cursor-grab active:cursor-grabbing text-muted-foreground/25 hover:text-muted-foreground/60 transition-colors shrink-0 select-none"
+            >
+              <GripVertical className="size-4" />
+            </div>
+          } />
           <TooltipContent side="right">拖拽排序</TooltipContent>
         </Tooltip>
 
@@ -137,7 +172,7 @@ export function ConfigItemRow({
           value={item.title}
           onChange={(e) => onUpdate(item.id, 'title', e.target.value)}
           placeholder="未命名配置"
-          className="flex-1 h-9 border-transparent bg-transparent font-semibold text-sm shadow-none px-2 placeholder:text-muted-foreground/35 placeholder:font-normal"
+          className="flex-1 h-9 border-transparent bg-transparent font-semibold text-sm shadow-none !px-2.5 placeholder:text-muted-foreground/35 placeholder:font-normal"
         />
 
         {/* 启动按钮 */}
@@ -180,13 +215,14 @@ export function ConfigItemRow({
                 </DialogDescription>
               </div>
               <div className="flex justify-end gap-2" style={{ padding: '12px 28px 20px' }}>
-                <Button variant="ghost" size="sm" onClick={() => setDeleteOpen(false)}>
+                <Button variant="ghost" size="sm" onClick={() => setDeleteOpen(false)} style={{ padding: '6px 12px', height: '32px' }}>
                   取消
                 </Button>
                 <Button
                   variant="destructive"
                   size="sm"
                   onClick={confirmDelete}
+                  style={{ padding: '6px 12px', height: '32px' }}
                 >
                   删除
                 </Button>
@@ -197,54 +233,55 @@ export function ConfigItemRow({
       </div>
 
       {/* 字段区域 */}
-      <div style={{ padding: '12px 20px 20px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ padding: '10px 16px 16px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {/* 工作目录 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <label className="text-[11px] font-medium text-muted-foreground/60 tracking-wide select-none uppercase">
+          <label className="text-[11px] font-medium text-muted-foreground/70 tracking-wide select-none uppercase">
             工作目录
           </label>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Input
               value={item.dir}
               onChange={(e) => onUpdate(item.id, 'dir', e.target.value)}
+              onBlur={handleDirBlur}
+              onKeyDown={handleDirKeyDown}
               placeholder="文件夹路径"
-              className="flex-1 min-w-0 h-10 !px-2.5 text-[13px]"
-              style={{ paddingLeft: 10, paddingRight: 10 }}
+              className="flex-1 min-w-0 h-10 !px-3 text-[13px]"
             />
             <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="sm" onClick={handleBrowse} className="shrink-0 h-10 min-w-10 px-3">
+              <TooltipTrigger render={
+                <Button variant="outline" onClick={handleBrowse} className="shrink-0" style={{ width: '40px', height: '40px', padding: '8px' }}>
                   <FolderOpen className="size-4" />
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent>浏览文件夹</TooltipContent>
+              } />
+              <TooltipContent side="bottom">浏览</TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger asChild>
+              <TooltipTrigger render={
                 <Button
                   variant="outline"
-                  size="sm"
                   disabled={!item.dir.trim()}
                   onClick={handleOpenFolder}
-                  className="shrink-0 h-10 min-w-10 px-3"
+                  className="shrink-0"
+                  style={{ width: '40px', height: '40px', padding: '8px' }}
                 >
                   <ExternalLink className="size-4" />
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent>打开文件夹</TooltipContent>
+              } />
+              <TooltipContent side="bottom">打开</TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger asChild>
+              <TooltipTrigger render={
                 <Button
                   variant="outline"
-                  size="sm"
                   disabled={!item.dir.trim() || creating}
                   onClick={handleCreateDir}
-                  className={`shrink-0 h-10 min-w-10 px-3 transition-all duration-300 ${
+                  className={`shrink-0 transition-all duration-300 ${
                     created
                       ? 'bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600'
                       : ''
                   }`}
+                  style={{ width: '40px', height: '40px', padding: '8px' }}
                 >
                   {creating ? (
                     <Loader2 className="size-4 animate-spin" />
@@ -254,9 +291,9 @@ export function ConfigItemRow({
                     <FolderPlus className="size-4" />
                   )}
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {created ? '已新建' : dirExists ? '目录已存在，无需重复新建' : '新建文件夹'}
+              } />
+              <TooltipContent side="bottom">
+                {created ? '已新建' : dirExists ? '已存在' : '新建'}
               </TooltipContent>
             </Tooltip>
           </div>
@@ -264,15 +301,14 @@ export function ConfigItemRow({
 
         {/* 执行指令 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <label className="text-[11px] font-medium text-muted-foreground/60 tracking-wide select-none uppercase">
+          <label className="text-[11px] font-medium text-muted-foreground/70 tracking-wide select-none uppercase">
             执行指令
           </label>
           <Input
             value={item.command}
             onChange={(e) => onUpdate(item.id, 'command', e.target.value)}
             placeholder="例如: claude"
-            className="h-10 !px-2.5 text-[13px] font-mono"
-            style={{ paddingLeft: 10, paddingRight: 10 }}
+            className="h-10 !px-3 text-[13px] font-mono"
           />
         </div>
       </div>
