@@ -5,6 +5,7 @@ import type { ConfigItem } from '@/types'
 interface ConfigState {
   items: ConfigItem[]
   addItem: () => void
+  addItemWithPath: (dir: string, title: string) => void
   removeItem: (id: string) => void
   updateItem: (id: string, field: keyof Omit<ConfigItem, 'id'>, value: string) => void
   moveItem: (fromIndex: number, toIndex: number) => void
@@ -23,6 +24,14 @@ export const useConfigStore = create<ConfigState>()(
         set((state) => ({
           items: [
             { id: createId(), title: '', dir: '', command: 'claude' },
+            ...state.items,
+          ],
+        })),
+
+      addItemWithPath: (dir, title) =>
+        set((state) => ({
+          items: [
+            { id: createId(), title, dir, command: 'claude' },
             ...state.items,
           ],
         })),

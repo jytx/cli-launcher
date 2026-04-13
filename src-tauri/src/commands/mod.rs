@@ -60,7 +60,7 @@ fn launch_terminal_window(dir: &str, command: &str, title: &str, _terminal_app: 
 
 // ============ macOS 平台实现 ============
 
-/// macOS: 使用 osascript 打开终端窗口，支持 Terminal.app 和 iTerm2
+/// macOS: 使用 osascript 打开终端窗口，支持 Terminal.app、iTerm2 和自定义应用
 #[cfg(target_os = "macos")]
 fn launch_terminal_window(dir: &str, command: &str, title: &str, terminal_app: &str) -> Result<(), String> {
     // 转义特殊字符
@@ -76,44 +76,91 @@ fn launch_terminal_window(dir: &str, command: &str, title: &str, terminal_app: &
     let escaped_command = escape(command);
     let escaped_title = escape(title);
 
-    let script = if terminal_app == "iterm2" {
-        // iTerm2 AppleScript
-        format!(
-            r#"
-            tell application "iTerm"
-                activate
-                create window with default profile
-                tell current session of current window
-                    write text "cd \"{dir}\" && {command}"
-                end tell
-            end tell
-            "#,
-            dir = escaped_dir,
-            command = escaped_command
-        )
-    } else {
-        // 默认 Terminal.app AppleScript
-        format!(
-            r#"
-            tell application "Terminal"
-                activate
-                set newTab to do script "cd \"{dir}\" && {command}" in front window
-                if "{title}" is not "" then
-                    set custom title of newTab to "{title}"
-                end if
-            end tell
-            "#,
-            dir = escaped_dir,
-            command = escaped_command,
-            title = escaped_title
-        )
-    };
+    eprintln!("启动终端: app={}, dir={}, command={}", terminal_app, dir, command);
 
-    Command::new("osascript")
-        .arg("-e")
-        .arg(&script)
-        .spawn()
-        .map_err(|e| format!("启动终端失败: {}", e))?;
+    match terminal_app {
+        "iterm2" => {
+            // iTerm2 AppleScript
+            let script = format!(
+                r#"
+                tell application "iTerm"
+                    activate
+                    create window with default profile
+                    tell current session of current window
+                        write text "cd \"{dir}\" && {command}"
+                    end tell
+                end tell
+                "#,
+                dir = escaped_dir,
+                command = escaped_command
+            );
+            Command::new("osascript")
+                .arg("-e")
+                .arg(&script)
+                .spawn()
+                .map_err(|e| format!("启动 iTerm2 失败: {}", e))?;
+        }
+        "default" => {
+            // 默认 Terminal.app AppleScript
+            let script = format!(
+                r#"
+                tell application "Terminal"
+                    activate
+                    set newTab to do script "cd \"{dir}\" && {command}" in front window
+                    if "{title}" is not "" then
+                        set custom title of newTab to "{title}"
+                    end if
+                end tell
+                "#,
+                dir = escaped_dir,
+                command = escaped_command,
+                title = escaped_title
+            );
+            Command::new("osascript")
+                .arg("-e")
+                .arg(&script)
+                .spawn()
+                .map_err(|e| format!("启动 Terminal 失败: {}", e))?;
+        }
+        "ghostty" => {
+            // Ghostty: 直接使用命令行参数启动新窗口
+            // 使用 zsh -i 以加载 .zshrc 中的 alias
+            let shell_command = format!("cd {} && {}", dir, command);
+            let escaped_shell = shell_command.replace('\\', "\\\\").replace('"', "\\\"");
+
+            eprintln!("正在启动 Ghostty，命令: {}", shell_command);
+
+            // 方法1: 直接使用 ghostty 命令启动新窗口
+            let result = Command::new("ghostty")
+                .args(["-e", "zsh", "-i", "-c", &escaped_shell])
+                .spawn();
+
+            // 如果直接启动失败，尝试通过 open 命令
+            if result.is_err() {
+                eprintln!("直接启动 Ghostty 失败，尝试通过 open 命令");
+                let script = format!(
+                    r#"
+                    do shell script "open -na Ghostty --args -e zsh -i -c \"{escaped_shell}\""
+                    "#,
+                    escaped_shell = escaped_shell
+                );
+                Command::new("osascript")
+                    .arg("-e")
+                    .arg(&script)
+                    .spawn()
+                    .map_err(|e| format!("启动 Ghostty 失败: {}", e))?;
+            } else {
+                eprintln!("Ghostty 启动成功");
+            }
+        }
+        _ => {
+            // 其他应用暂不支持，返回友好提示
+            return Err(format!(
+                "目前 {} 暂不支持。\n\n已验证支持的终端:\n• 默认\n• iTerm2\n• Ghostty\n\n如需支持更多终端，请告知开发者。",
+                terminal_app
+            ));
+        }
+    }
     Ok(())
 }
 
@@ -265,4 +312,51 @@ pub fn get_exe_dir() -> Result<String, String> {
         .parent()
         .ok_or("无法获取程序目录")?;
     Ok(dir.to_string_lossy().to_string())
+}
+
+/// 验证路径是否存在且为目录
+#[tauri::command]
+pub fn validate_directory(dir_path: String) -> Result<bool, String> {
+    println!("validate_directory 被调用，路径: {}", dir_path);
+
+    if dir_path.trim().is_empty() {
+        println!("路径为空");
+        return Ok(false);
+    }
+
+    let path_obj = std::path::Path::new(&dir_path);
+
+    // 使用 try_exists 来避免潜在的 panic
+    let exists = match path_obj.try_exists() {
+        Ok(e) => e,
+        Err(e) => {
+            println!("检查路径存在性时出错: {}", e);
+            return Ok(false);
+        }
+    };
+
+    if !exists {
+        println!("路径不存在");
+        return Ok(false);
+    }
+
+    let is_dir = path_obj.is_dir();
+    println!("是否为目录: {}", is_dir);
+    Ok(is_dir)
+}
+
+/// 处理文件拖拽事件（从 Tauri 的文件系统事件）
+#[cfg(target_os = "macos")]
+#[tauri::command]
+pub fn handle_file_drop(paths: Vec<String>) -> Result<Vec<String>, String> {
+    // 过滤出目录
+    let dirs: Vec<String> = paths
+        .into_iter()
+        .filter(|p| {
+            let path_obj = std::path::Path::new(p);
+            path_obj.exists() && path_obj.is_dir()
+        })
+        .collect();
+
+    Ok(dirs)
 }

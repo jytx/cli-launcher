@@ -35,3 +35,16 @@ export async function createDir(dir: string): Promise<boolean> {
 export async function openFolder(dir: string): Promise<void> {
   await invoke('open_folder', { dir })
 }
+
+/** 验证路径是否存在且为目录 */
+export async function validateDirectory(dirPath: string): Promise<boolean> {
+  console.log('validateDirectory 被调用，参数:', { dirPath, type: typeof dirPath, value: dirPath })
+  try {
+    const result = await invoke<boolean>('validate_directory', { dirPath })
+    console.log('validateDirectory 返回:', result)
+    return result
+  } catch (error) {
+    console.error('validateDirectory 出错:', error)
+    throw error
+  }
+}
