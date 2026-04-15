@@ -47,7 +47,7 @@ export function ConfigItemRow({
   const [creating, setCreating] = useState(false)
   const [created, setCreated] = useState(false)
   const [dirExists, setDirExists] = useState(false)
-  const [launchError, setLaunchError] = useState<string | null>(null)
+  const [_, setLaunchError] = useState<string | null>(null)
   const { terminalApp } = useSettingsStore()
   const gradient = GRADIENTS[index % GRADIENTS.length]
 
@@ -104,7 +104,7 @@ export function ConfigItemRow({
       setTimeout(() => setLaunched(false), 1500)
     } catch (e) {
       console.error('启动失败:', e)
-      setLaunchError(String(e))
+      setLaunchError(e instanceof Error ? e.message : `${e}`)
       // 显示错误信息 3 秒
       setTimeout(() => setLaunchError(null), 3000)
     } finally {
@@ -134,7 +134,7 @@ export function ConfigItemRow({
         setDirExists(true)
       }
     } catch (e) {
-      window.alert(String(e))
+      window.alert(e instanceof Error ? e.message : `${e}`)
     } finally {
       setCreating(false)
     }
