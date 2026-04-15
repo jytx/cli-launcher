@@ -1,6 +1,7 @@
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useConfigStore } from '@/stores/useConfigStore'
 import { readFile, writeFile, getExeDir } from '@/services/tauri'
+import { join } from '@tauri-apps/api/path'
 
 const CONFIG_FILENAME = 'clilauncher-config.json'
 
@@ -14,7 +15,7 @@ export async function initFileSync() {
   if (!dataDir) {
     try {
       const exeDir = await getExeDir()
-      dataDir = `${exeDir}\\data`
+      dataDir = await join(exeDir, 'data')
       useSettingsStore.getState().setDataDir(dataDir)
     } catch {
       return
@@ -22,7 +23,7 @@ export async function initFileSync() {
   }
 
   // 从文件加载配置
-  const filePath = `${dataDir}\\${CONFIG_FILENAME}`
+  const filePath = await join(dataDir, CONFIG_FILENAME)
   try {
     const content = await readFile(filePath)
     const items = JSON.parse(content)
@@ -42,13 +43,13 @@ export async function initFileSync() {
   }
 
   // 订阅配置变更，写入文件
-  useConfigStore.subscribe((state) => {
+  useConfigStore.subscribe(async (state) => {
     const { dataDir } = useSettingsStore.getState()
     if (!dataDir) return
 
     if (debounceTimer) clearTimeout(debounceTimer)
-    debounceTimer = setTimeout(() => {
-      const filePath = `${dataDir}\\${CONFIG_FILENAME}`
+    debounceTimer = setTimeout(async () => {
+      const filePath = await join(dataDir, CONFIG_FILENAME)
       writeFile(filePath, JSON.stringify(state.items, null, 2)).catch((e) =>
         console.error('同步配置文件失败:', e)
       )
