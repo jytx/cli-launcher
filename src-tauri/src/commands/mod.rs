@@ -123,35 +123,32 @@ fn launch_terminal_window(dir: &str, command: &str, title: &str, terminal_app: &
                 .map_err(|e| format!("启动 Terminal 失败: {}", e))?;
         }
         "ghostty" => {
-            // Ghostty: 直接使用命令行参数启动新窗口
-            // 使用 zsh -i 以加载 .zshrc 中的 alias
-            let shell_command = format!("cd {} && {}", dir, command);
-            let escaped_shell = shell_command.replace('\\', "\\\\").replace('"', "\\\"");
+            // Ghostty: 使用 AppleScript 在现有实例中打开新窗口并执行命令
+            let escaped_dir = escape(dir);
+            let escaped_command = escape(command);
 
-            eprintln!("正在启动 Ghostty，命令: {}", shell_command);
+            eprintln!("正在启动 Ghostty，dir={}, command={}", dir, command);
 
-            // 方法1: 直接使用 ghostty 命令启动新窗口
-            let result = Command::new("ghostty")
-                .args(["-e", "zsh", "-i", "-c", &escaped_shell])
-                .spawn();
+            // 使用 AppleScript 创建新窗口并执行命令
+            let script = format!(
+                r#"
+                tell application "Ghostty"
+                    activate
+                    set cfg to new surface configuration
+                    set initial working directory of cfg to "{dir}"
+                    set command of cfg to "zsh -i -c \"{command}\""
 
-            // 如果直接启动失败，尝试通过 open 命令
-            if result.is_err() {
-                eprintln!("直接启动 Ghostty 失败，尝试通过 open 命令");
-                let script = format!(
-                    r#"
-                    do shell script "open -na Ghostty --args -e zsh -i -c \"{escaped_shell}\""
-                    "#,
-                    escaped_shell = escaped_shell
-                );
-                Command::new("osascript")
-                    .arg("-e")
-                    .arg(&script)
-                    .spawn()
-                    .map_err(|e| format!("启动 Ghostty 失败: {}", e))?;
-            } else {
-                eprintln!("Ghostty 启动成功");
-            }
+                    set win to new window with configuration cfg
+                end tell
+                "#,
+                dir = escaped_dir,
+                command = escaped_command
+            );
+            Command::new("osascript")
+                .arg("-e")
+                .arg(&script)
+                .spawn()
+                .map_err(|e| format!("启动 Ghostty 失败: {}", e))?;
         }
         _ => {
             // 其他应用暂不支持，返回友好提示
