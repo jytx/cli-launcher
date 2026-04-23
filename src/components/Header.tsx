@@ -22,7 +22,7 @@ function dedupeTitle(title: string, existingTitles: Set<string>): string {
 export function Header() {
   const { items, addItem, setItems } = useConfigStore()
   const { searchQuery, setSearchQuery } = useUiStore()
-  const { terminalApp } = useSettingsStore()
+  const { terminalApp, defaultCommand } = useSettingsStore()
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   const handleLaunchAll = async () => {
@@ -78,7 +78,7 @@ export function Header() {
           id: crypto.randomUUID(),
           title,
           dir: item.dir || '',
-          command: item.command || 'claude',
+          command: item.command || defaultCommand,
         }
       })
       setItems([...items, ...newItems])

@@ -48,7 +48,7 @@ export function ConfigItemRow({
   const [created, setCreated] = useState(false)
   const [dirExists, setDirExists] = useState(false)
   const [_, setLaunchError] = useState<string | null>(null)
-  const { terminalApp } = useSettingsStore()
+  const { terminalApp, defaultCommand } = useSettingsStore()
   const gradient = GRADIENTS[index % GRADIENTS.length]
 
   const handleBrowse = async () => {
@@ -99,7 +99,7 @@ export function ConfigItemRow({
     setLaunchError(null)
     try {
       console.log('正在启动终端:', { dir: item.dir, command: item.command, title: item.title, terminalApp })
-      await launchCmd(item.dir, item.command || 'claude', item.title, terminalApp)
+      await launchCmd(item.dir, item.command || defaultCommand, item.title, terminalApp)
       setLaunched(true)
       setTimeout(() => setLaunched(false), 1500)
     } catch (e) {

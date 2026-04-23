@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { FolderOpen, Sun, Moon, Terminal as TerminalIcon } from 'lucide-react'
+import { FolderOpen, Sun, Moon, Terminal as TerminalIcon, TerminalSquare } from 'lucide-react'
 
 const CONFIG_FILENAME = 'clilauncher-config.json'
 
@@ -27,7 +27,7 @@ function isMacOS(): boolean {
 }
 
 export function SettingsDialog({ open: isOpen, onOpenChange }: SettingsDialogProps) {
-  const { dataDir, setDataDir, terminalApp, setTerminalApp } = useSettingsStore()
+  const { dataDir, setDataDir, terminalApp, setTerminalApp, defaultCommand, setDefaultCommand } = useSettingsStore()
   const { theme, toggleTheme } = useThemeStore()
   const items = useConfigStore((s) => s.items)
   const [loading, setLoading] = useState(false)
@@ -144,6 +144,26 @@ export function SettingsDialog({ open: isOpen, onOpenChange }: SettingsDialogPro
                 深色
               </button>
             </div>
+          </div>
+
+          <Separator />
+
+          {/* 默认命令 */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <TerminalSquare style={{ width: 14, height: 14, color: 'var(--muted-foreground)' }} />
+              <span style={{ fontSize: 13, fontWeight: 500 }}>默认命令</span>
+            </div>
+            <input
+              type="text"
+              value={defaultCommand}
+              onChange={(e) => setDefaultCommand(e.target.value)}
+              placeholder="例如: claude"
+              className="h-8 !px-3 text-[12px] font-mono rounded-md border border-border bg-background outline-none focus:ring-1 focus:ring-ring/30"
+            />
+            <span style={{ fontSize: 11, color: 'var(--muted-foreground)' }}>
+              新建配置项时的默认执行命令
+            </span>
           </div>
 
           {/* 终端选择器 - 仅 macOS 显示 */}

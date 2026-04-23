@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import type { ConfigItem } from '@/types'
 
 interface ConfigState {
@@ -23,7 +24,7 @@ export const useConfigStore = create<ConfigState>()(
       addItem: () =>
         set((state) => ({
           items: [
-            { id: createId(), title: '', dir: '', command: 'claude' },
+            { id: createId(), title: '', dir: '', command: useSettingsStore.getState().defaultCommand },
             ...state.items,
           ],
         })),
@@ -31,7 +32,7 @@ export const useConfigStore = create<ConfigState>()(
       addItemWithPath: (dir, title) =>
         set((state) => ({
           items: [
-            { id: createId(), title, dir, command: 'claude' },
+            { id: createId(), title, dir, command: useSettingsStore.getState().defaultCommand },
             ...state.items,
           ],
         })),
